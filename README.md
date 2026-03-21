@@ -72,7 +72,7 @@ GitHub와 Bitbucket Server를 모두 지원합니다.
 ```bash
 git clone https://github.com/ghostflare76/skill-marketplace.git
 cd skill-marketplace
-npm install
+bun install
 ```
 
 ### 2. 환경 변수 설정
@@ -90,7 +90,7 @@ BITBUCKET_TOKEN=your_bitbucket_token        # Bitbucket Server 사용 시
 ### 3. 실행
 
 ```bash
-npm run dev
+bun dev
 ```
 
 [http://localhost:3000](http://localhost:3000) 에서 확인할 수 있습니다.
@@ -107,23 +107,7 @@ npm run dev
 4. 표시 이름과 설명 입력
 5. 자동 검증 후 등록 완료
 
-### 기본 저장소 설정
-
-`src/lib/repos.config.ts`에서 앱 시작 시 기본으로 로드할 저장소를 설정할 수 있습니다:
-
-```typescript
-export const repositories: SkillRepository[] = [
-  {
-    id: "github:your-org-your-skills",
-    provider: "github",
-    owner: "your-org",
-    repo: "your-skills",
-    branch: "main",
-    displayName: "My Skills",
-    description: "우리 팀의 스킬 저장소",
-  },
-];
-```
+### 기본 저장소 
 
 UI에서 추가한 저장소는 `data/custom-repos.json`에 저장됩니다.
 
@@ -165,20 +149,20 @@ your-repo/
 ## 스크립트
 
 ```bash
-npm run dev            # 개발 서버 (hot reload)
-npm run build          # 프로덕션 빌드
-npm run start          # 프로덕션 서버
-npm run lint           # ESLint 검사
-npm run test           # 테스트 실행 (Vitest)
-npm run test:watch     # 테스트 watch 모드
-npm run test:coverage  # 테스트 커버리지 리포트
+bun dev            # 개발 서버 (hot reload)
+bun run build      # 프로덕션 빌드
+bun start          # 프로덕션 서버
+bun lint           # ESLint 검사
+bun test           # 테스트 실행 (Vitest)
+bun test:watch     # 테스트 watch 모드
+bun test:coverage  # 테스트 커버리지 리포트
 ```
 
 ## 배포
 
 ```bash
-npm run build
-npm run start
+bun run build
+bun start
 ```
 
 Vercel, Docker, 또는 Node.js 서버 어디에서든 배포할 수 있습니다.
