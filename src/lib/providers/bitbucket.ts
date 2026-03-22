@@ -289,6 +289,22 @@ export class BitbucketProvider implements RepositoryProviderAdapter {
     return allEntries;
   }
 
+  async getLastCommitDate(
+    repo: SkillRepository,
+    filePath: string
+  ): Promise<string | null> {
+    try {
+      const url = `${this.apiBase(repo)}/commits?path=${encodeURIComponent(filePath)}&until=${encodeURIComponent(repo.branch)}&limit=1`;
+      const res = await fetch(url, { headers: this.headers });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const ts = data.values?.[0]?.authorTimestamp;
+      return ts ? new Date(ts).toISOString() : null;
+    } catch {
+      return null;
+    }
+  }
+
   async getSkillContent(
     repo: SkillRepository,
     skillName: string,

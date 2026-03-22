@@ -243,6 +243,24 @@ export class GitHubProvider implements RepositoryProviderAdapter {
     return allEntries;
   }
 
+  async getLastCommitDate(
+    repo: SkillRepository,
+    filePath: string
+  ): Promise<string | null> {
+    try {
+      const { data: commits } = await this.octokit.rest.repos.listCommits({
+        owner: repo.owner,
+        repo: repo.repo,
+        sha: repo.branch,
+        path: filePath,
+        per_page: 1,
+      });
+      return commits[0]?.commit?.committer?.date ?? null;
+    } catch {
+      return null;
+    }
+  }
+
   async getSkillContent(
     repo: SkillRepository,
     skillName: string,

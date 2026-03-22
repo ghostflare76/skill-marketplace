@@ -118,4 +118,41 @@ Content`;
 
     expect(skill.githubUrl).toBe(skill.sourceUrl);
   });
+
+  describe("isNew 및 lastUpdated (커밋 날짜 기반)", () => {
+    const raw = "---\nname: New Skill\n---\ncontent";
+
+    it("lastCommitDate가 7일 이내이면 isNew === true", () => {
+      const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+      const skill = parseSkillMd(raw, "new-skill", repo, "skill", "skills", undefined, twoDaysAgo);
+
+      expect(skill.isNew).toBe(true);
+      expect(skill.lastUpdated).toBe(twoDaysAgo);
+    });
+
+    it("lastCommitDate가 7일 초과이면 isNew === false", () => {
+      const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString();
+      const skill = parseSkillMd(raw, "old-skill", repo, "skill", "skills", undefined, tenDaysAgo);
+
+      expect(skill.isNew).toBe(false);
+      expect(skill.lastUpdated).toBe(tenDaysAgo);
+    });
+
+    it("lastCommitDate가 정확히 7일이면 isNew === true", () => {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const skill = parseSkillMd(raw, "edge-skill", repo, "skill", "skills", undefined, sevenDaysAgo);
+
+      expect(skill.isNew).toBe(true);
+    });
+
+    it("lastCommitDate 미전달 시 isNew === false, lastUpdated는 현재 시각", () => {
+      const before = new Date().toISOString();
+      const skill = parseSkillMd(raw, "no-date", repo, "skill", "skills");
+      const after = new Date().toISOString();
+
+      expect(skill.isNew).toBe(false);
+      expect(skill.lastUpdated >= before).toBe(true);
+      expect(skill.lastUpdated <= after).toBe(true);
+    });
+  });
 });

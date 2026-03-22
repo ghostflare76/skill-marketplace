@@ -47,3 +47,5 @@ export function getCategoryFilterSelectedClass(category: string): string {
 export function getCategoryIcon(category: string): string {
   return (categoryStyles[category as CategoryType] ?? fallback).icon;
 }
+
+export const NEW_BADGE_CLASS = "bg-rose-500/10 text-rose-400 border-rose-500/20";

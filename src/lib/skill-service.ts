@@ -2,6 +2,7 @@ import matter from "gray-matter";
 import { Skill, SkillRepository } from "./types";
 import { SkillEntry } from "./providers/types";
 import { getProvider } from "./providers/registry";
+import { buildSkillFilePath } from "./providers/constants";
 
 // In-memory cache
 const cache = new Map<string, { data: unknown; timestamp: number }>();
@@ -69,13 +70,24 @@ export async function getSkillContent(
   return content;
 }
 
+const NEW_SKILL_THRESHOLD_DAYS = 7;
+const MS_PER_DAY = 86_400_000;
+
+function isWithinDays(dateStr: string, days: number): boolean {
+  const time = new Date(dateStr).getTime();
+  if (Number.isNaN(time)) return false;
+  const diff = Date.now() - time;
+  return diff >= 0 && diff <= days * MS_PER_DAY;
+}
+
 export function parseSkillMd(
   raw: string,
   skillName: string,
   repo: SkillRepository,
   sourceType: "skill" | "agent" | "command",
   sourcePath: string,
-  pluginName?: string
+  pluginName?: string,
+  lastCommitDate?: string
 ): Skill {
   let frontmatter: Record<string, string> = {};
   let content = raw;
@@ -109,7 +121,8 @@ export function parseSkillMd(
     categoryId: sourceType,
     sourceType,
     content,
-    lastUpdated: new Date().toISOString(),
+    lastUpdated: lastCommitDate || new Date().toISOString(),
+    isNew: lastCommitDate ? isWithinDays(lastCommitDate, NEW_SKILL_THRESHOLD_DAYS) : false,
     githubUrl: sourceUrl, // 하위 호환
     sourceUrl,
     providerType: repo.provider,
@@ -129,18 +142,27 @@ export async function getAllSkills(
   const allSkills: Skill[] = [];
 
   for (const repo of repos) {
+    const provider = getProvider(repo.provider);
     const entries = await getSkillDirectories(repo);
 
     const skillPromises = entries.map(async (entry) => {
       const raw = await getSkillContent(repo, entry.name, entry.sourcePath, entry.flat);
       if (!raw) return null;
-      return parseSkillMd(raw, entry.name, repo, entry.sourceType, entry.sourcePath, entry.pluginName);
+
+      let lastCommitDate: string | null = null;
+      if (provider.getLastCommitDate) {
+        const filePath = buildSkillFilePath(entry.sourcePath, entry.name, entry.flat);
+        lastCommitDate = await provider.getLastCommitDate(repo, filePath);
+      }
+
+      return parseSkillMd(raw, entry.name, repo, entry.sourceType, entry.sourcePath, entry.pluginName, lastCommitDate ?? undefined);
     });
 
     const skills = await Promise.all(skillPromises);
     allSkills.push(...skills.filter((s): s is Skill => s !== null));
   }
 
+  allSkills.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
   setCache(cacheKey, allSkills);
   return allSkills;
 }

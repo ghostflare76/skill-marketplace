@@ -44,4 +44,10 @@ export interface RepositoryProviderAdapter {
   validateRepository(
     repo: SkillRepository
   ): Promise<{ valid: boolean; error?: string; skillCount?: number }>;
+
+  /** 스킬 파일의 최종 커밋 날짜 조회 (ISO string 반환) */
+  getLastCommitDate?(
+    repo: SkillRepository,
+    filePath: string
+  ): Promise<string | null>;
 }

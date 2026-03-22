@@ -45,3 +45,5 @@ next-env.d.ts
 
 # user data
 .claude/
+
+docs/

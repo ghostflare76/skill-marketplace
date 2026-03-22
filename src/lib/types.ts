@@ -34,6 +34,7 @@ export interface Skill {
   providerType: string;
   installCommand: string;
   pluginName?: string;
+  isNew: boolean;
 }
 
 export interface SkillsResponse {

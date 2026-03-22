@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { BitbucketProvider } from "./bitbucket";
 import { createBitbucketRepo } from "../__tests__/fixtures";
 
@@ -65,6 +65,40 @@ describe("BitbucketProvider", () => {
       expect(url).toBe(
         "https://git.example.com/projects/PROJ/repos/repo/browse/agents/my-agent.md?at=master"
       );
+    });
+  });
+
+  describe("getLastCommitDate", () => {
+    const repo = createBitbucketRepo();
+
+    it("파일 경로의 최신 커밋 날짜를 ISO string으로 반환", async () => {
+      const timestamp = 1711000000000; // 2024-03-21T...
+      vi.spyOn(global, "fetch").mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ values: [{ authorTimestamp: timestamp }] }),
+      } as Response);
+
+      const result = await provider.getLastCommitDate!(repo, "skills/my-skill/SKILL.md");
+      expect(result).toBe(new Date(timestamp).toISOString());
+    });
+
+    it("커밋이 없으면 null 반환", async () => {
+      vi.spyOn(global, "fetch").mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ values: [] }),
+      } as Response);
+
+      const result = await provider.getLastCommitDate!(repo, "skills/nonexistent/SKILL.md");
+      expect(result).toBeNull();
+    });
+
+    it("API 에러 시 null 반환 (throw 없음)", async () => {
+      vi.spyOn(global, "fetch").mockResolvedValueOnce({
+        ok: false,
+      } as Response);
+
+      const result = await provider.getLastCommitDate!(repo, "skills/error/SKILL.md");
+      expect(result).toBeNull();
     });
   });
 });

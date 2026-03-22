@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Skill } from "@/lib/types";
-import { getCategoryBadgeClass } from "@/lib/categoryColors";
+import { getCategoryBadgeClass, NEW_BADGE_CLASS } from "@/lib/categoryColors";
 import CategoryIcon from "@/components/CategoryIcon";
 
 interface SkillCardProps {
@@ -21,9 +21,16 @@ export default function SkillCard({ skill }: SkillCardProps) {
       className="group relative block rounded-xl border border-gray-800 bg-gray-900/50 p-5 transition-all hover:border-indigo-500/50 hover:bg-gray-900 hover:shadow-lg hover:shadow-indigo-500/5"
     >
       <div className="flex items-start justify-between mb-3">
-        <h3 className="text-lg font-semibold text-white group-hover:text-indigo-400 transition-colors">
-          {skill.name}
-        </h3>
+        <div className="flex items-center gap-2 min-w-0">
+          <h3 className="text-lg font-semibold text-white group-hover:text-indigo-400 transition-colors truncate">
+            {skill.name}
+          </h3>
+          {skill.isNew && (
+            <span className={`shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${NEW_BADGE_CLASS}`}>
+              NEW
+            </span>
+          )}
+        </div>
         <span className="shrink-0 ml-2 rounded-md bg-gray-800 px-2 py-0.5 text-xs font-mono text-gray-400">
           v{skill.version}
         </span>

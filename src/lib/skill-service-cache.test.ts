@@ -6,6 +6,7 @@ import type { SkillEntry } from "./providers/types";
 const mockGetSkillDirectories = vi.fn();
 const mockGetSkillContent = vi.fn();
 const mockBuildSourceUrl = vi.fn(() => "https://source.url");
+const mockGetLastCommitDate = vi.fn();
 
 vi.mock("./providers/registry", () => ({
   getProvider: () => ({
@@ -15,6 +16,7 @@ vi.mock("./providers/registry", () => ({
     getSkillDirectories: mockGetSkillDirectories,
     getSkillContent: mockGetSkillContent,
     buildSourceUrl: mockBuildSourceUrl,
+    getLastCommitDate: mockGetLastCommitDate,
   }),
 }));
 
@@ -155,6 +157,55 @@ describe("skill-service cache & orchestration", () => {
     it("getSkillByName 미존재 repo/skill → null", async () => {
       const skill = await getSkillByName([repo], "nonexistent", "skill");
       expect(skill).toBeNull();
+    });
+  });
+
+  describe("isNew integration (커밋 날짜 연동)", () => {
+    it("getLastCommitDate가 7일 이내 날짜 반환 시 isNew === true", async () => {
+      const entries: SkillEntry[] = [
+        { name: "new-skill", sourceType: "skill", sourcePath: "skills", flat: false },
+      ];
+      const recentDate = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+
+      mockGetSkillDirectories.mockResolvedValue(entries);
+      mockGetSkillContent.mockResolvedValue("---\nname: New Skill\n---\ncontent");
+      mockGetLastCommitDate.mockResolvedValue(recentDate);
+
+      const skills = await getAllSkills([repo]);
+
+      expect(skills[0].isNew).toBe(true);
+      expect(skills[0].lastUpdated).toBe(recentDate);
+      expect(mockGetLastCommitDate).toHaveBeenCalledWith(repo, "skills/new-skill/SKILL.md");
+    });
+
+    it("getLastCommitDate가 7일 초과 날짜 반환 시 isNew === false", async () => {
+      const entries: SkillEntry[] = [
+        { name: "old-skill", sourceType: "agent", sourcePath: "agents", flat: true },
+      ];
+      const oldDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      mockGetSkillDirectories.mockResolvedValue(entries);
+      mockGetSkillContent.mockResolvedValue("---\nname: Old Skill\n---\ncontent");
+      mockGetLastCommitDate.mockResolvedValue(oldDate);
+
+      const skills = await getAllSkills([repo]);
+
+      expect(skills[0].isNew).toBe(false);
+      expect(mockGetLastCommitDate).toHaveBeenCalledWith(repo, "agents/old-skill.md");
+    });
+
+    it("getLastCommitDate가 null 반환 시 isNew === false", async () => {
+      const entries: SkillEntry[] = [
+        { name: "no-date", sourceType: "command", sourcePath: "commands", flat: true },
+      ];
+
+      mockGetSkillDirectories.mockResolvedValue(entries);
+      mockGetSkillContent.mockResolvedValue("---\nname: No Date\n---\ncontent");
+      mockGetLastCommitDate.mockResolvedValue(null);
+
+      const skills = await getAllSkills([repo]);
+
+      expect(skills[0].isNew).toBe(false);
     });
   });
 });
