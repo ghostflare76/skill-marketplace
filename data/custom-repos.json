@@ -1,21 +1,21 @@
 [
   {
-    "id": "github:coreyhaines31-marketingskills",
+    "id": "github:vercel-labs-agent-skills",
     "provider": "github",
-    "owner": "coreyhaines31",
-    "repo": "marketingskills",
+    "owner": "vercel-labs",
+    "repo": "agent-skills",
     "branch": "main",
-    "displayName": "marketingskills",
+    "displayName": "agent-skills",
     "description": "",
     "categories": []
   },
   {
-    "id": "github:affaan-m-everything-claude-code",
+    "id": "github:obra-superpowers",
     "provider": "github",
-    "owner": "affaan-m",
-    "repo": "everything-claude-code",
+    "owner": "obra",
+    "repo": "superpowers",
     "branch": "main",
-    "displayName": "everything-claude-code",
+    "displayName": "superpowers",
     "description": "",
     "categories": []
   }
