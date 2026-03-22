@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import { Skill } from "@/lib/types";
 import { getCategoryBadgeClass } from "@/lib/categoryColors";
 import { ProviderIcon, getProviderLabel } from "@/components/ProviderIcon";
+import { formatDate } from "@/lib/format-date";
 
 const RELATED_PATTERN = /see\s+([\w-]+)/gi;
 
@@ -114,6 +115,14 @@ export default function SkillDetailPage() {
               <span className="text-sm text-gray-500">
                 from {skill.repoDisplayName}
               </span>
+              {skill.lastUpdated && (
+                <>
+                  <span className="text-gray-600">·</span>
+                  <span className="text-sm text-gray-500">
+                    Updated {formatDate(skill.lastUpdated)}
+                  </span>
+                </>
+              )}
             </div>
           </div>
           <a
