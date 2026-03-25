@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAllRepos, addCustomRepo, deleteCustomRepo } from "@/lib/repo-store";
 import { invalidateRepoCache } from "@/lib/skill-service";
 import { SkillRepository } from "@/lib/types";
+import { getProvider } from "@/lib/providers/registry";
+import { resolveRepoVersions } from "@/lib/version-resolver";
 
 export const runtime = "nodejs";
 
@@ -48,6 +50,16 @@ export async function POST(request: NextRequest) {
       ...(baseUrl ? { baseUrl } : {}),
       categories: [],
     };
+
+    // 버전 정보 resolve (1회성)
+    try {
+      const provider = getProvider(providerName);
+      const versionInfo = await resolveRepoVersions(provider, newRepo);
+      if (versionInfo.versionMap) newRepo.versionMap = versionInfo.versionMap;
+      if (versionInfo.repoVersion) newRepo.repoVersion = versionInfo.repoVersion;
+    } catch {
+      // 버전 resolve 실패 시 무시 (fallback "0.0.0")
+    }
 
     await addCustomRepo(newRepo);
     invalidateRepoCache();

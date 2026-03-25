@@ -261,14 +261,10 @@ export class GitHubProvider implements RepositoryProviderAdapter {
     }
   }
 
-  async getSkillContent(
+  async getFileContent(
     repo: SkillRepository,
-    skillName: string,
-    sourcePath: string,
-    flat: boolean
+    filePath: string
   ): Promise<string | null> {
-    const filePath = buildSkillFilePath(sourcePath, skillName, flat);
-
     try {
       const { data } = await this.octokit.rest.repos.getContent({
         owner: repo.owner,
@@ -276,14 +272,40 @@ export class GitHubProvider implements RepositoryProviderAdapter {
         path: filePath,
         ref: repo.branch,
       });
-
       if ("content" in data && data.content) {
         return Buffer.from(data.content, "base64").toString("utf-8");
       }
       return null;
-    } catch (error) {
-      console.error(`Failed to get skill content for ${skillName}:`, error);
+    } catch {
       return null;
     }
+  }
+
+  async listDirectoryNames(
+    repo: SkillRepository,
+    dirPath: string
+  ): Promise<string[]> {
+    try {
+      const { data } = await this.octokit.rest.repos.getContent({
+        owner: repo.owner,
+        repo: repo.repo,
+        path: dirPath,
+        ref: repo.branch,
+      });
+      if (!Array.isArray(data)) return [];
+      return data.map((item) => item.name);
+    } catch {
+      return [];
+    }
+  }
+
+  async getSkillContent(
+    repo: SkillRepository,
+    skillName: string,
+    sourcePath: string,
+    flat: boolean
+  ): Promise<string | null> {
+    const filePath = buildSkillFilePath(sourcePath, skillName, flat);
+    return this.getFileContent(repo, filePath);
   }
 }

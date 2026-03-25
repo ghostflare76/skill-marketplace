@@ -101,4 +101,66 @@ describe("BitbucketProvider", () => {
       expect(result).toBeNull();
     });
   });
+
+  describe("getFileContent", () => {
+    const repo = createBitbucketRepo();
+
+    it("파일 존재 시 text 내용 반환", async () => {
+      vi.spyOn(global, "fetch").mockResolvedValueOnce({
+        ok: true,
+        text: async () => '{"version": "1.0.0"}',
+      } as Response);
+
+      const result = await provider.getFileContent!(repo, "plugins/test/.claude-plugin/plugin.json");
+      expect(result).toBe('{"version": "1.0.0"}');
+    });
+
+    it("404 시 null 반환", async () => {
+      vi.spyOn(global, "fetch").mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+      } as Response);
+
+      const result = await provider.getFileContent!(repo, "nonexistent/file.json");
+      expect(result).toBeNull();
+    });
+
+    it("네트워크 에러 시 null 반환", async () => {
+      vi.spyOn(global, "fetch").mockRejectedValueOnce(new Error("Network Error"));
+
+      const result = await provider.getFileContent!(repo, "some/file.json");
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("listDirectoryNames", () => {
+    const repo = createBitbucketRepo();
+
+    it("디렉토리 존재 시 이름 배열 반환", async () => {
+      vi.spyOn(global, "fetch").mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          children: {
+            values: [
+              { path: { name: "pluginA" }, type: "DIRECTORY" },
+              { path: { name: "pluginB" }, type: "DIRECTORY" },
+            ],
+            isLastPage: true,
+            start: 0,
+            limit: 500,
+          },
+        }),
+      } as Response);
+
+      const result = await provider.listDirectoryNames!(repo, "plugins");
+      expect(result).toEqual(["pluginA", "pluginB"]);
+    });
+
+    it("에러 시 빈 배열 반환", async () => {
+      vi.spyOn(global, "fetch").mockRejectedValueOnce(new Error("Network Error"));
+
+      const result = await provider.listDirectoryNames!(repo, "nonexistent");
+      expect(result).toEqual([]);
+    });
+  });
 });

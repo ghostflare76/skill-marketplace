@@ -77,4 +77,71 @@ describe("GitHubProvider", () => {
       expect(result).toBeNull();
     });
   });
+
+  describe("getFileContent", () => {
+    const repo = createGithubRepo();
+
+    it("파일 존재 시 base64 디코딩된 내용 반환", async () => {
+      const content = Buffer.from("hello world").toString("base64");
+      // @ts-expect-error - private 프로퍼티 접근
+      vi.spyOn(provider.octokit.rest.repos, "getContent").mockResolvedValueOnce({
+        data: { content, encoding: "base64" },
+      } as never);
+
+      const result = await provider.getFileContent!(repo, "plugins/test/.claude-plugin/plugin.json");
+      expect(result).toBe("hello world");
+    });
+
+    it("파일이 디렉토리인 경우 null 반환", async () => {
+      // @ts-expect-error - private 프로퍼티 접근
+      vi.spyOn(provider.octokit.rest.repos, "getContent").mockResolvedValueOnce({
+        data: [{ name: "file1.ts" }],
+      } as never);
+
+      const result = await provider.getFileContent!(repo, "some/dir");
+      expect(result).toBeNull();
+    });
+
+    it("404 에러 시 null 반환", async () => {
+      // @ts-expect-error - private 프로퍼티 접근
+      vi.spyOn(provider.octokit.rest.repos, "getContent").mockRejectedValueOnce(new Error("Not Found"));
+
+      const result = await provider.getFileContent!(repo, "nonexistent/file.json");
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("listDirectoryNames", () => {
+    const repo = createGithubRepo();
+
+    it("디렉토리 존재 시 이름 배열 반환", async () => {
+      // @ts-expect-error - private 프로퍼티 접근
+      vi.spyOn(provider.octokit.rest.repos, "getContent").mockResolvedValueOnce({
+        data: [
+          { name: "pluginA", type: "dir" },
+          { name: "pluginB", type: "dir" },
+          { name: "README.md", type: "file" },
+        ],
+      } as never);
+
+      const result = await provider.listDirectoryNames!(repo, "plugins");
+      expect(result).toEqual(["pluginA", "pluginB", "README.md"]);
+    });
+
+    it("404 시 빈 배열 반환", async () => {
+      // @ts-expect-error - private 프로퍼티 접근
+      vi.spyOn(provider.octokit.rest.repos, "getContent").mockRejectedValueOnce(new Error("Not Found"));
+
+      const result = await provider.listDirectoryNames!(repo, "nonexistent");
+      expect(result).toEqual([]);
+    });
+
+    it("API 에러 시 빈 배열 반환", async () => {
+      // @ts-expect-error - private 프로퍼티 접근
+      vi.spyOn(provider.octokit.rest.repos, "getContent").mockRejectedValueOnce(new Error("Server Error"));
+
+      const result = await provider.listDirectoryNames!(repo, "plugins");
+      expect(result).toEqual([]);
+    });
+  });
 });

@@ -16,7 +16,7 @@ description: A test skill
     const skill = parseSkillMd(raw, "test-skill", repo, "skill", "skills");
 
     expect(skill.name).toBe("Test Skill");
-    expect(skill.version).toBe("1.2.3");
+    expect(skill.version).toBe("0.0.0"); // frontmatter.version은 더 이상 사용하지 않음
     expect(skill.description).toBe("A test skill");
     expect(skill.content).toContain("# Content here");
   });

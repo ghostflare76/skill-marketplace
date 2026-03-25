@@ -50,4 +50,16 @@ export interface RepositoryProviderAdapter {
     repo: SkillRepository,
     filePath: string
   ): Promise<string | null>;
+
+  /** 임의 경로의 파일 내용 조회 (없으면 null) */
+  getFileContent?(
+    repo: SkillRepository,
+    filePath: string
+  ): Promise<string | null>;
+
+  /** 디렉토리 내 항목명 목록 조회 (없으면 빈 배열) */
+  listDirectoryNames?(
+    repo: SkillRepository,
+    dirPath: string
+  ): Promise<string[]>;
 }

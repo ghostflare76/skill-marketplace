@@ -3,6 +3,7 @@ import { Skill, SkillRepository } from "./types";
 import { SkillEntry } from "./providers/types";
 import { getProvider } from "./providers/registry";
 import { buildSkillFilePath } from "./providers/constants";
+import { resolveSkillVersion } from "./version-resolver";
 
 // In-memory cache
 const cache = new Map<string, { data: unknown; timestamp: number }>();
@@ -113,7 +114,7 @@ export function parseSkillMd(
   return {
     slug: skillName,
     name: frontmatter.name || skillName,
-    version: frontmatter.version || "0.0.0",
+    version: "0.0.0",
     description: frontmatter.description || "",
     repoId: repo.id,
     repoDisplayName: repo.displayName,
@@ -155,7 +156,9 @@ export async function getAllSkills(
         lastCommitDate = await provider.getLastCommitDate(repo, filePath);
       }
 
-      return parseSkillMd(raw, entry.name, repo, entry.sourceType, entry.sourcePath, entry.pluginName, lastCommitDate ?? undefined);
+      const skill = parseSkillMd(raw, entry.name, repo, entry.sourceType, entry.sourcePath, entry.pluginName, lastCommitDate ?? undefined);
+      skill.version = resolveSkillVersion(skill.pluginName, repo);
+      return skill;
     });
 
     const skills = await Promise.all(skillPromises);

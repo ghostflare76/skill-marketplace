@@ -305,6 +305,32 @@ export class BitbucketProvider implements RepositoryProviderAdapter {
     }
   }
 
+  async getFileContent(
+    repo: SkillRepository,
+    filePath: string
+  ): Promise<string | null> {
+    try {
+      const url = `${this.apiBase(repo)}/raw/${filePath}?at=${repo.branch}`;
+      const res = await fetch(url, { headers: this.headers });
+      if (!res.ok) return null;
+      return await res.text();
+    } catch {
+      return null;
+    }
+  }
+
+  async listDirectoryNames(
+    repo: SkillRepository,
+    dirPath: string
+  ): Promise<string[]> {
+    try {
+      const items = await this.listDirectory(repo, dirPath);
+      return items.map((i) => i.path.name);
+    } catch {
+      return [];
+    }
+  }
+
   async getSkillContent(
     repo: SkillRepository,
     skillName: string,
@@ -312,15 +338,6 @@ export class BitbucketProvider implements RepositoryProviderAdapter {
     flat: boolean
   ): Promise<string | null> {
     const filePath = buildSkillFilePath(sourcePath, skillName, flat);
-
-    try {
-      const url = `${this.apiBase(repo)}/raw/${filePath}?at=${repo.branch}`;
-      const res = await fetch(url, { headers: this.headers });
-      if (!res.ok) return null;
-      return await res.text();
-    } catch (error) {
-      console.error(`Failed to get skill content for ${skillName}:`, error);
-      return null;
-    }
+    return this.getFileContent(repo, filePath);
   }
 }

@@ -8,6 +8,10 @@ export interface SkillRepository {
   description: string;
   baseUrl?: string;  // 자체 호스팅 인스턴스 URL (e.g. "https://git.ncsoft.net")
   categories?: CategoryDefinition[];
+  /** 플러그인별 버전 맵 (plugins/{name}/.claude-plugin/plugin.json → version) */
+  versionMap?: Record<string, string>;
+  /** 레포 단일 버전 (marketplace.json → plugins[].version 또는 metadata.version) */
+  repoVersion?: string;
 }
 
 export interface CategoryDefinition {
